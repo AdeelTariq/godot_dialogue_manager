@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var balloon: Control = %Balloon
 @onready var character_label: RichTextLabel = %CharacterLabel
 @onready var dialogue_label: DialogueLabel = %DialogueLabel
+@onready var responses_panel: Control = $Balloon/MarginContainer/Panel2
 @onready var responses_menu: DialogueResponsesMenu = %ResponsesMenu
 
 ## The dialogue resource
@@ -47,6 +48,7 @@ var dialogue_line: DialogueLine:
 		dialogue_label.hide()
 		dialogue_label.dialogue_line = dialogue_line
 
+		responses_panel.hide()
 		responses_menu.hide()
 		responses_menu.set_responses(dialogue_line.responses)
 
@@ -62,6 +64,7 @@ var dialogue_line: DialogueLine:
 		# Wait for input
 		if dialogue_line.responses.size() > 0:
 			balloon.focus_mode = Control.FOCUS_NONE
+			responses_panel.show()
 			responses_menu.show()
 		elif dialogue_line.time != "":
 			var time = dialogue_line.text.length() * 0.02 if dialogue_line.time == "auto" else dialogue_line.time.to_float()
@@ -78,6 +81,8 @@ var dialogue_line: DialogueLine:
 func _ready() -> void:
 	balloon.hide()
 	Engine.get_singleton("DialogueManager").mutated.connect(_on_mutated)
+	
+	#dialogue_label.spoke.connect(func(a,b,c): SoundFxMgr.play_type_sound())
 
 	# If the responses menu doesn't have a next action set, use this one
 	if responses_menu.next_action.is_empty():
@@ -87,15 +92,6 @@ func _ready() -> void:
 func _unhandled_input(_event: InputEvent) -> void:
 	# Only the balloon is allowed to handle input while it's showing
 	get_viewport().set_input_as_handled()
-
-
-func _notification(what: int) -> void:
-	# Detect a change of locale and update the current dialogue line to show the new language
-	if what == NOTIFICATION_TRANSLATION_CHANGED and is_instance_valid(dialogue_label):
-		var visible_ratio = dialogue_label.visible_ratio
-		self.dialogue_line = await resource.get_next_dialogue_line(dialogue_line.id)
-		if visible_ratio < 1:
-			dialogue_label.skip_typing()
 
 
 ## Start some dialogue
@@ -111,7 +107,7 @@ func next(next_id: String) -> void:
 	self.dialogue_line = await resource.get_next_dialogue_line(next_id, temporary_game_states)
 
 
-#region Signals
+### Signals
 
 
 func _on_mutated(_mutation: Dictionary) -> void:
@@ -148,6 +144,4 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 
 func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
 	next(response.next_id)
-
-
-#endregion
+	#SoundFxMgr.play_dialogue_accept()
