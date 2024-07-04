@@ -562,7 +562,9 @@ func check_condition(data: Dictionary, extra_game_states: Array) -> bool:
 	if data.get(&"condition", null) == null: return true
 	if data.condition.size() == 0: return true
 
-	return await resolve(data.condition.expression.duplicate(true), extra_game_states)
+	if await resolve(data.condition.expression.duplicate(true), extra_game_states):
+		return true
+	return false
 
 
 # Make a change to game state or run a method

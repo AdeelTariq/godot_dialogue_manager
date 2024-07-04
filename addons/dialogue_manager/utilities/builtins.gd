@@ -27,8 +27,10 @@ static func is_supported(thing) -> bool:
 
 static func resolve_property(builtin, property: String):
 	match typeof(builtin):
-		TYPE_ARRAY, TYPE_DICTIONARY, TYPE_QUATERNION, TYPE_STRING, TYPE_STRING_NAME:
+		TYPE_ARRAY, TYPE_QUATERNION, TYPE_STRING, TYPE_STRING_NAME:
 			return builtin[property]
+		TYPE_DICTIONARY:
+			return builtin.get(property)
 
 		# Some types have constants that we need to manually resolve
 

@@ -9,6 +9,7 @@ extends CanvasLayer
 @onready var balloon: Control = %Balloon
 @onready var character_label: RichTextLabel = %CharacterLabel
 @onready var dialogue_label: DialogueLabel = %DialogueLabel
+@onready var responses_panel: Control = $Balloon/MarginContainer/Panel2
 @onready var responses_menu: DialogueResponsesMenu = %ResponsesMenu
 
 ## The dialogue resource
@@ -47,6 +48,7 @@ var dialogue_line: DialogueLine:
 		dialogue_label.hide()
 		dialogue_label.dialogue_line = dialogue_line
 
+		responses_panel.hide()
 		responses_menu.hide()
 		responses_menu.set_responses(dialogue_line.responses)
 
@@ -62,6 +64,7 @@ var dialogue_line: DialogueLine:
 		# Wait for input
 		if dialogue_line.responses.size() > 0:
 			balloon.focus_mode = Control.FOCUS_NONE
+			responses_panel.show()
 			responses_menu.show()
 		elif dialogue_line.time != "":
 			var time = dialogue_line.text.length() * 0.02 if dialogue_line.time == "auto" else dialogue_line.time.to_float()
