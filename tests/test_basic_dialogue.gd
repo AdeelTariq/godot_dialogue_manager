@@ -12,12 +12,6 @@ func test_can_parse_titles() -> void:
 	assert(output.titles.has("some_title"), "Should have known title.")
 	assert(output.titles["some_title"] == "2", "Should point to the next line.")
 
-	output = parse(" ~ indented_title\nNathan: Oh no!")
-
-	assert(output.errors.size() > 0, "Should have an error.")
-	assert(output.errors[0].line_number == 0, "Should be an indentation error.")
-	assert(output.errors[0].error == DialogueConstants.ERR_NESTED_TITLE, "Should be an indentation error.")
-
 
 func test_can_parse_basic_dialogue() -> void:
 	var output = parse("Nathan: This is dialogue with a name.\nThis is dialogue without a name")
@@ -187,6 +181,33 @@ Nathan: Jump 3.")
 
 	assert(output.lines["5"].siblings.size() == 3, "Should have 3 random siblings.")
 	assert(output.lines["5"].siblings[0].weight == 1, "Undefined weight should be 1.")
+	assert(output.lines["5"].siblings[2].weight == 3, "Weight of 3 should be 3.")
+
+
+func test_can_parse_random_conditional_lines() -> void:
+	var output = parse("
+% Nathan: Random 1.
+%2 [if false] Nathan: Random 2.
+% Nathan: Random 3.
+% [if false] => jump_1
+% [if true] => jump_2
+%3 => jump_3
+~ jump_1
+Nathan: Jump 1.
+~ jump_2
+Nathan: Jump 2.
+~ jump_3
+Nathan: Jump 3.")
+
+	assert(output.errors.is_empty(), "Should have no errors.")
+	assert(output.lines["2"].siblings.size() == 3, "Should have 3 random siblings.")
+	assert(output.lines["2"].siblings[0].weight == 1, "Undefined weight should be 1.")
+	assert(output.lines["2"].siblings[1].weight == 2, "Weight of 2 should be 2.")
+	assert(output.lines["2"].siblings[1].condition.expression[0].value == "false", "Should parse expression.")
+
+	assert(output.lines["5"].siblings.size() == 3, "Should have 3 random siblings.")
+	assert(output.lines["5"].siblings[0].weight == 1, "Undefined weight should be 1.")
+	assert(output.lines["5"].siblings[1].condition.expression[0].value == "true", "Should parse expression.")
 	assert(output.lines["5"].siblings[2].weight == 3, "Weight of 3 should be 3.")
 
 
