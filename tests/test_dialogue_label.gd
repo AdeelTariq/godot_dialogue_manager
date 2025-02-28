@@ -1,9 +1,6 @@
 extends AbstractTest
 
 
-const DialogueConstants = preload("res://addons/dialogue_manager/constants.gd")
-
-
 var label: DialogueLabel
 
 
@@ -11,18 +8,18 @@ func _make_line(text: String) -> DialogueLine:
 	return DialogueLine.new({
 		id = "0",
 		next_id = "1",
-		type = DialogueConstants.TYPE_DIALOGUE,
+		type = DMConstants.TYPE_DIALOGUE,
 		character = "Nathan",
 		text = text
 	})
 
 
-func before_each() -> void:
+func _before_each() -> void:
 	label = load("res://addons/dialogue_manager/dialogue_label.tscn").instantiate()
 	Engine.get_main_loop().current_scene.add_child(label)
 
 
-func after_each() -> void:
+func _after_each() -> void:
 	label.queue_free()
 
 
@@ -37,3 +34,24 @@ func test_type_out() -> void:
 	await label.finished_typing
 
 	assert(label.visible_characters == label.get_parsed_text().length(), "Should be finished typing.")
+
+
+func test_inline_mutations() -> void:
+	var data: Dictionary = {
+		counter = 0
+	}
+
+	var resource = create_resource("
+~ start
+Nathan: This line has[set counter += 1][set counter += 10] two mutations.
+=> END")
+
+	var dialogue_line: DialogueLine = await resource.get_next_dialogue_line("start", [data])
+	label.dialogue_line = dialogue_line
+
+	assert(data.counter == 0, "Counter should initially be zero.")
+
+	label.type_out()
+	await label.finished_typing
+
+	assert(data.counter == 11, "Both mutations should have run.")
